@@ -1,23 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.Entity;
-using EmployeesAssignement.Configuration;
-using EmployeesAssignement.Models;
+﻿using EmployeesAssignement.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeesAssignement.Persistence;
 
-[DbConfigurationType(typeof(NpgsqlConfiguration))]
-public class TaskContext : DbContext
+public class TaskDbContext : DbContext
 {
-    public TaskContext() : base(GetConnectionString())
-    {
-    }
-
     public DbSet<Employee> Employees { get; set; }
 
-    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseNpgsql(GetConnectionString());
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("public");
-
+        
         modelBuilder.Entity<Employee>()
             .ToTable("employees")
             .HasKey(e => e.EmployeeId);
@@ -25,7 +21,7 @@ public class TaskContext : DbContext
         modelBuilder.Entity<Employee>()
             .Property(e => e.EmployeeId)
             .HasColumnName("employeeid")
-            .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
+            .ValueGeneratedNever();
 
         modelBuilder.Entity<Employee>()
             .Property(e => e.EmployeeName)
@@ -36,20 +32,18 @@ public class TaskContext : DbContext
             .Property(e => e.EmployeeSalary)
             .HasColumnName("employeesalary")
             .IsRequired();
-
-        base.OnModelCreating(modelBuilder);
     }
-    
+
     private static string GetConnectionString()
     {
         var connectionString = Environment.GetEnvironmentVariable("connectionString");
-        
+
         if (string.IsNullOrEmpty(connectionString))
         {
             throw new InvalidOperationException(
                 "Connection string not found. Please set the 'connectionString' environment variable.");
         }
-        
+
         return connectionString;
     }
 }

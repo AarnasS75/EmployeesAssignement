@@ -1,46 +1,48 @@
-﻿using System.Data.Entity;
-using EmployeesAssignement.Models;
+﻿using EmployeesAssignement.Models;
 using EmployeesAssignement.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeesAssignement.Services;
 
-public class EmployeeService
+public interface IEmployeeService
 {
-    private readonly TaskContext _database;
+    Task<Employee?> GetEmployeeAsync(int employeeId);
+    Task SetEmployeeAsync(int employeeId, string name, int salary);
+}
 
-    public EmployeeService(TaskContext database)
+public class EmployeeService : IEmployeeService
+{
+    private readonly TaskDbContext _database;
+
+    public EmployeeService(TaskDbContext database)
     {
         _database = database;
     }
 
     public async Task<Employee?> GetEmployeeAsync(int employeeId)
     {
-        var employee = await _database.Employees.AsNoTracking().FirstOrDefaultAsync(x => x.EmployeeId == employeeId);
-        if (employee is not null)
-        {
-            return employee;
-        }
-        
-        Console.WriteLine($"Employee with ID {employeeId} not found");
-        return null;
+        return await _database.Employees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.EmployeeId == employeeId);
     }
 
     public async Task SetEmployeeAsync(int employeeId, string name, int salary)
     {
-        var existingEmployee = await GetEmployeeAsync(employeeId);
-        if (existingEmployee is not null)
+        try
         {
-            throw new InvalidOperationException($"Employee with ID {employeeId} already exists.");
+            _database.Employees.Add(new Employee
+            {
+                EmployeeId = employeeId,
+                EmployeeName = name,
+                EmployeeSalary = salary
+            });
+
+            await _database.SaveChangesAsync();
         }
-        
-        var newEmployee = new Employee
+        catch (Exception ex)
         {
-            EmployeeId = employeeId,
-            EmployeeName = name,
-            EmployeeSalary = salary
-        };
-        
-        _database.Employees.Add(newEmployee);
-        await _database.SaveChangesAsync();
+            Console.WriteLine($"Error setting employee: {ex.Message}");
+            throw;
+        }
     }
 }
