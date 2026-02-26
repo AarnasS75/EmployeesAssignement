@@ -12,6 +12,12 @@ A .NET 6.0 console application to get and set employee data using Entity Framewo
 
 **Set up the database**
 
+Using Docker Compose:
+```powershell
+docker-compose up -d
+```
+
+Alternatively, use the provided PowerShell script:
 ```powershell
 ./setUpDatabase.ps1
 ```

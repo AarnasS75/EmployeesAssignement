@@ -1,0 +1,11 @@
+﻿services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: guest
+      POSTGRES_DB: uvsproject
+    ports:
+      - "7777:5432"
+    volumes:
+      - ./DatabaseSchema/dbSchema.sql:/docker-entrypoint-initdb.d/dbSchema.sql
